@@ -6,7 +6,7 @@ import time
 
 # serverlist = {'changseok@163.180.172.26 -p 16022' : 378, 'changseok@163.180.172.118 -p 16022' : 594, 'changseok@dgx.komosys.com' : 308}
 # serverlist = {'changseok@163.180.172.26 -p 16022' : 1, 'changseok@163.180.172.118 -p 16022' : 1, 'changseok@dgx.komosys.com' : 1}
-serverlist = {'dgx.komosys.com' : 1}
+serverlist = {'dgx.komosys.com' : 1, 'dgx.komosys.com' : 1, 'dgx.komosys.com' : 1, 'dgx.komosys.com' : 1}
 
 
 def work(server, query, sc, sn, local_result):
@@ -15,17 +15,14 @@ def work(server, query, sc, sn, local_result):
     query += ' -sc ' + str(sc) + ' -sn ' + str(sn)
     result = subprocess.check_output ('ssh ' + server + ' ' + query , shell=True)
     result = result.decode("utf-8")
-    print(result)
     result = str(result[1:-2]).split(', ')
-    print(result)
     result = [int(e) for e in result]
-    print(result)
     local_result.append((result[0], result[1]))
 
     # print('time spend : ', time.time() - start_time)
     return 
 
-def gpu_check(serverlist):
+def gpu_check(serverlist, force = False):
     sub_result = collections.OrderedDict()
     gpu_activation_result = collections.OrderedDict()
     
@@ -50,15 +47,18 @@ def gpu_check(serverlist):
             print('   [RED]')
 
         for i, e in enumerate(m):
-            if e == 0:
+            if force == True:
                 gpu_activation_result[server + ' CUDA_VISIBLE_DEVICES=' + str(i)] = serverlist[server]
+            else:
+                if e == 0:
+                    gpu_activation_result[server + ' CUDA_VISIBLE_DEVICES=' + str(i)] = serverlist[server]
         
     return gpu_activation_result
 
 
 
-def run(query):
-    gpu_activation_result = gpu_check(serverlist)
+def run(query, force = False):
+    gpu_activation_result = gpu_check(serverlist, force)
     result = []
     threads = []
     if len(gpu_activation_result) == 0:

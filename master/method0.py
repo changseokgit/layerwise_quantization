@@ -30,7 +30,7 @@ for i in reversed(range(23)):
     data = ' '.join([str(i+1) for j in range(layer_size)])
 
     print('python3 /home/changseok/layerwise_quantization/slave/main.py ' + ' -wb ' + data + ' -fb ' + data + ' -b 1' + ' -m ' + model_name)
-    result = run('python3 /home/changseok/layerwise_quantization/slave/main.py ' + ' -wb ' + data + ' -fb ' + data + ' -b 1' + ' -m ' + model_name)
+    result = run('python3 /home/changseok/layerwise_quantization/slave/main.py ' + ' -wb ' + data + ' -fb ' + data + ' -b 1' + ' -m ' + model_name, True)
     print('result is : ', result)
     result_list.append(result)
 
