@@ -20,12 +20,12 @@ def work(server, query, sc, sn, local_result):
     local_result.append((result[0], result[1]))
 
     # print('time spend : ', time.time() - start_time)
-    return 
+    return
 
 def gpu_check(serverlist, force = False):
     sub_result = collections.OrderedDict()
     gpu_activation_result = collections.OrderedDict()
-    
+
     # get gpu activation
     for server in serverlist.keys():
         try:
@@ -52,30 +52,32 @@ def gpu_check(serverlist, force = False):
             else:
                 if e == 0:
                     gpu_activation_result[server + ' CUDA_VISIBLE_DEVICES=' + str(i)] = serverlist[server]
-        
+
     return gpu_activation_result
 
 
 
-def run(query, force = False):
+def run(query, force = False, repeat = 1):
     gpu_activation_result = gpu_check(serverlist, force)
     result = []
     threads = []
     if len(gpu_activation_result) == 0:
         print('[ABORT] No working server now')
         exit(0)
-    print('working gpu count : ', len(gpu_activation_result))
+    print('working gpu count : ', repeat * len(gpu_activation_result))
 
-    sc = sum(gpu_activation_result.values())
+    sc = repeat * sum(gpu_activation_result.values())
 
     savepoint = 0
-    for server in gpu_activation_result.keys():
-        sn = [str(savepoint + j) for j in range(gpu_activation_result[server])]
-        savepoint = int(sn[-1]) + 1
-        threads.append(Thread(target=work, args=(server, query, sum(gpu_activation_result.values()), ' '.join(sn), result)))
-    start = time.time()
-    for i in range(len(gpu_activation_result.keys())):
-        threads[i].start()
+
+    for i in range(repeat):
+        for server in gpu_activation_result.keys():
+            sn = [str(savepoint + j) for j in range(gpu_activation_result[server])]
+            savepoint = int(sn[-1]) + 1
+            threads.append(Thread(target=work, args=(server, query, sum(gpu_activation_result.values()), ' '.join(sn), result)))
+        start = time.time()
+        for i in range(len(gpu_activation_result.keys())):
+            threads[i].start()
     for i in range(len(gpu_activation_result.keys())):
         threads[i].join()
     print('time spend : ', time.time() - start)
@@ -88,13 +90,3 @@ def run(query, force = False):
             return (sum([pair[0] for pair in result])/50000, sum([pair[1] for pair in result])/50000)
         else:
             continue
-        
-
-
-
-
-
-
-
-
-
