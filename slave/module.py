@@ -95,7 +95,6 @@ class QuantizeConv2d(nn.Conv2d):
         self.weight_bit_width = bit_width[1]
         self.print_info = print_info
 
-        print(bit_width)
 
 
     def forward(self, input):

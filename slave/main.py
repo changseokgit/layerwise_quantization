@@ -55,7 +55,6 @@ start_point = int(input_size / server_count * server_number[0])
 end_point = int(input_size / server_count * (server_number[-1] + 1))
 indices = range(start_point, end_point)
 
-print(start_point, end_point)
 
 val_loader = torch.utils.data.DataLoader(
     val_set,
@@ -76,7 +75,6 @@ elif model_name == 'squeeze':
 model = torch.nn.DataParallel(model).cuda()
 #========================create model=========================
 
-print(len(val_loader))
 
 #========================validate=========================
 criterion = nn.CrossEntropyLoss().cuda()
