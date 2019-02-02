@@ -4,9 +4,9 @@ import collections
 from threading import Thread
 import time
 
-serverlist = {'changseok@163.180.172.26 -p 16022' : 378, 'changseok@163.180.172.118 -p 16022' : 594, 'changseok@dgx.komosys.com' : 308}
+# serverlist = {'changseok@163.180.172.26 -p 16022' : 378, 'changseok@163.180.172.118 -p 16022' : 594, 'changseok@dgx.komosys.com' : 308}
 # serverlist = {'changseok@163.180.172.26 -p 16022' : 1, 'changseok@163.180.172.118 -p 16022' : 1, 'changseok@dgx.komosys.com' : 1}
-# serverlist = {'changseok@163.180.172.118 -p 16022' : 1}
+serverlist = {'dgx.komosys.com' : 1}
 
 
 def work(server, query, sc, sn, local_result):
@@ -14,8 +14,10 @@ def work(server, query, sc, sn, local_result):
 
     query += ' -sc ' + str(sc) + ' -sn ' + str(sn)
     result = subprocess.check_output ('ssh ' + server + ' ' + query , shell=True)
-    result = str(result).split('\\n')[-2].split(' ')
-    local_result.append((float(result[-3])*len(sn.split(' ')), float(result[-1])*len(sn.split(' '))))
+    result = result.decode("utf-8") 
+    result = str(result[1:-2]).split(', ')
+    result = [int(e) for e in result]
+    local_result.append((result[0], result[1]))
 
     # print('time spend : ', time.time() - start_time)
     return 
@@ -80,7 +82,7 @@ def run(query):
         if time.time() - now > 5:
                 return run(query)
         if len(result) == len(gpu_activation_result):
-            return (sum([pair[0] for pair in result]) / sum(gpu_activation_result.values()), sum([pair[1] for pair in result]) / sum(gpu_activation_result.values()))
+            return (sum([pair[0] for pair in result])/50000, sum([pair[1] for pair in result])/50000)
         else:
             continue
         
