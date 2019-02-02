@@ -14,9 +14,12 @@ def work(server, query, sc, sn, local_result):
 
     query += ' -sc ' + str(sc) + ' -sn ' + str(sn)
     result = subprocess.check_output ('ssh ' + server + ' ' + query , shell=True)
-    result = result.decode("utf-8") 
+    result = result.decode("utf-8")
+    print(result)
     result = str(result[1:-2]).split(', ')
+    print(result)
     result = [int(e) for e in result]
+    print(result)
     local_result.append((result[0], result[1]))
 
     # print('time spend : ', time.time() - start_time)

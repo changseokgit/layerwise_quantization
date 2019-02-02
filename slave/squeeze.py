@@ -42,7 +42,6 @@ class SqueezeNet(nn.Module):
         super(SqueezeNet, self).__init__()
 
         self.bit_width = bit_width
-        print(self.bit_width)
 
         if version not in [1.0, 1.1]:
             raise ValueError("Unsupported SqueezeNet version {version}:"
