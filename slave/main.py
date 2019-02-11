@@ -82,23 +82,19 @@ model = torch.nn.DataParallel(model).cuda()
 #========================weight processing=========================
 state_dict = model.state_dict()
         
-    counter = 0
-    total = 0
-    sum = 0
-    for module_name, layer in model.named_modules():
-        if type(layer) == torch.nn.modules.conv.Conv2d \
-        or type(layer) == torch.nn.modules.linear.Linear \
-        or type(layer) == torch.nn.modules.batchnorm.BatchNorm2d \
-        or type(layer) == module.QuantizeConv2d \
-        or type(layer) == module.QuantizeLinear: 
-            for layer_name, parameter in layer.named_parameters():
-                if weight_bitwidth[counter] != None:
-                    state_dict[module_name + '.' + layer_name] = module.quantize(parameter, weight_bitwidth[counter])
-                if pruning_threashold[counter] != None:
-                    state_dict[module_name + '.' + layer_name] = state_dict[module_name + '.' + layer_name] * module.pruning(parameter, pruning_threashold[counter])
-                    sum += len(torch.nonzero(state_dict[module_name + '.' + layer_name]))
-                    total += len(state_dict[module_name + '.' + layer_name].view(-1))
-            counter += 1
+counter = 0
+for module_name, layer in model.named_modules():
+    if type(layer) == torch.nn.modules.conv.Conv2d \
+    or type(layer) == torch.nn.modules.linear.Linear \
+    or type(layer) == torch.nn.modules.batchnorm.BatchNorm2d \
+    or type(layer) == module.QuantizeConv2d \
+    or type(layer) == module.QuantizeLinear: 
+        for layer_name, parameter in layer.named_parameters():
+            if weight_bitwidth[counter] != None:
+                state_dict[module_name + '.' + layer_name] = module.quantize(parameter, weight_bitwidth[counter])
+            if pruning_threashold[counter] != None:
+                state_dict[module_name + '.' + layer_name] = state_dict[module_name + '.' + layer_name] * module.pruning(parameter, pruning_threashold[counter])
+        counter += 1
      
 model.load_state_dict(state_dict)
 #========================weight processing=========================
