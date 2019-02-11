@@ -103,10 +103,12 @@ for module_name, layer in model.named_modules():
     or type(layer) == module.QuantizeConv2d \
     or type(layer) == module.QuantizeLinear:
         for layer_name, parameter in layer.named_parameters():
-            if weight_bitwidth[counter] != None:
-                state_dict[module_name + '.' + layer_name] = module.quantize(parameter, weight_bitwidth[counter])
-            if pruning_threashold[counter] != None:
-                state_dict[module_name + '.' + layer_name] = state_dict[module_name + '.' + layer_name] * module.pruning(parameter, pruning_threashold[counter])
+            if weight_bitwidth != None:
+                if weight_bitwidth[counter] != None:
+                    state_dict[module_name + '.' + layer_name] = module.quantize(parameter, weight_bitwidth[counter])
+            if pruning_threashold != None:
+                if pruning_threashold[counter] != None:
+                    state_dict[module_name + '.' + layer_name] = state_dict[module_name + '.' + layer_name] * module.pruning(parameter, pruning_threashold[counter])
         counter += 1
 
 model.load_state_dict(state_dict)
