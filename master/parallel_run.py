@@ -74,11 +74,11 @@ def run(query, force = False, repeat = 1):
         for server in gpu_activation_result.keys():
             sn = [str(savepoint + j) for j in range(gpu_activation_result[server])]
             savepoint = int(sn[-1]) + 1
-            threads.append(Thread(target=work, args=(server, query, sum(gpu_activation_result.values()), ' '.join(sn), result)))
-        start = time.time()
-        for i in range(len(gpu_activation_result.keys())):
-            threads[i].start()
-    for i in range(len(gpu_activation_result.keys())):
+            threads.append(Thread(target=work, args=(server, query, sc, ' '.join(sn), result)))
+    start = time.time()
+    for i in range(repeat * len(gpu_activation_result.keys())):
+        threads[i].start()
+    for i in range(repeat * len(gpu_activation_result.keys())):
         threads[i].join()
     print('time spend : ', time.time() - start)
 
@@ -86,7 +86,7 @@ def run(query, force = False, repeat = 1):
     while True:
         if time.time() - now > 5:
                 return run(query)
-        if len(result) == len(gpu_activation_result):
+        if len(result) == repeat * len(gpu_activation_result):
             return (sum([pair[0] for pair in result])/50000, sum([pair[1] for pair in result])/50000)
         else:
             continue
