@@ -10,20 +10,25 @@ def init_parameter(value, layer_size):
     elif type(value) == list:
         return ' '.join([str(value[j]) for j in range(layer_size)])
 
-def method1_subroutine(model, layer_size, mode):
+def method2_subroutine(model, layer_size, mode, order):
     result = list()
     query = 'python3 /home/changseok/layerwise_quantization/slave/main.py -b 1 -m ' + model
-    for i in reversed(range(23)):
-        if 0 in mode:
-            query += ' -wb ' + init_parameter(i+1, layer_size)
-        if 1 in mode:
-            query += ' -fb ' + init_parameter(i+1, layer_size)
-        if 2 in mode:
-            query += ' -pt ' + init_parameter(i+1, layer_size)
+    processing_factor = [0 for i in range(layer_size)]
 
-        print('running command is : ', query)
-        result.append(run(query))
-        print(result[-1])
+    for i in order:
+        for j in reversed(range(23)):
+            processing_factor[i] = j+1
+            if 0 in mode:
+                query += ' -wb ' + init_parameter(processing_factor, layer_size)
+            if 1 in mode:
+                query += ' -fb ' + init_parameter(processing_factor, layer_size)
+            if 2 in mode:
+                query += ' -pt ' + init_parameter(processing_factor, layer_size)
+
+            print('running command is : ', query)
+            result.append(run(query))
+            print(result[-1])
+
     return result
 
 
@@ -45,7 +50,7 @@ elif model_name == 'squeeze':
 
 # run distributed environment
 result_list = list()
-result_list.append(method1_subroutine(model_name, layer_size, [2]))
+result_list.append(method2_subroutine(model_name, layer_size, [2], range(16)))
 
 # save result
 file = open('/home/changseok/layerwise_quantization/master/result/' + model_name + '_method1.txt', 'w')

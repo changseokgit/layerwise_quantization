@@ -86,12 +86,12 @@ def pruning(indata, TH):
 
 def weight_processing(model, quantization_factor, pruning_factor):
     state_dict = model.state_dict()
-        
+
     counter = 0
     total = 0
     sum = 0
     for module_name, layer in model.named_modules():
-        if type(layer) == torch.nn.modules.conv.Conv2d or type(layer) == torch.nn.modules.linear.Linear or type(layer) == torch.nn.modules.batchnorm.BatchNorm2d or type(layer) == module.QuantizeConv2d or type(layer) == module.QuantizeLinear: 
+        if type(layer) == torch.nn.modules.conv.Conv2d or type(layer) == torch.nn.modules.linear.Linear or type(layer) == torch.nn.modules.batchnorm.BatchNorm2d or type(layer) == module.QuantizeConv2d or type(layer) == module.QuantizeLinear:
             for layer_name, parameter in layer.named_parameters():
                 if quantization_factor[counter] != None:
                     state_dict[module_name + '.' + layer_name] = module.quantize(parameter, quantization_factor[counter])
@@ -99,12 +99,12 @@ def weight_processing(model, quantization_factor, pruning_factor):
                     state_dict[module_name + '.' + layer_name] = state_dict[module_name + '.' + layer_name] * module.pruning(parameter, pruning_factor[counter])
                     sum += len(torch.nonzero(state_dict[module_name + '.' + layer_name]))
                     total += len(state_dict[module_name + '.' + layer_name].view(-1))
-                    print('['+str(counter)+'] layer pruning rate : ' + str((1-(len(torch.nonzero(state_dict[module_name + '.' + layer_name])) / 
+                    print('['+str(counter)+'] layer pruning rate : ' + str((1-(len(torch.nonzero(state_dict[module_name + '.' + layer_name])) /
                                                                                len(state_dict[module_name + '.' + layer_name].view(-1))))*100))
             counter += 1
-     
+
     print('total layer pruning rate : ' + str((1-sum/total)*100))
-            
+
     model.load_state_dict(state_dict)
 
 def get_info(weight_shape, out_shape):
@@ -117,20 +117,14 @@ def get_info(weight_shape, out_shape):
     return (parameter_size, parameter_size * out_size)
 
 class QuantizeConv2d(nn.Conv2d):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, bit_width = (None, None), print_info = False):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, bit_width = None, print_info = False):
         super(QuantizeConv2d, self).__init__(in_channels, out_channels, stride = stride, kernel_size = kernel_size, padding = padding)
-        self.feature_bit_width = bit_width[0]
-        self.weight_bit_width = bit_width[1]
+        self.feature_bit_width = bit_width
         self.print_info = print_info
 
 
 
     def forward(self, input):
-        if self.weight_bit_width != None and self.weight_bit_width != 24:
-            self.weight = quantize(self.weight, self.weight_bit_width)
-            if type(self.bias) != type(None):
-                self.bias = quantize(self.bias, self.weight_bit_width)
-
         out = nn.functional.conv2d(input, self.weight, self.bias, self.stride,
                                    self.padding, self.dilation, self.groups)
         if self.feature_bit_width != None and self.feature_bit_width != 24:
@@ -145,18 +139,12 @@ class QuantizeConv2d(nn.Conv2d):
 
 class QuantizeLinear(nn.Linear):
 
-    def __init__(self, in_channels, out_channels, bit_width = (None, None), print_info = False):
+    def __init__(self, in_channels, out_channels, bit_width = None, print_info = False):
         super(QuantizeLinear, self).__init__(in_channels, out_channels)
-        self.weight_bit_width = bit_width[1]
-        self.feature_bit_width = bit_width[0]
+        self.feature_bit_width = bit_width
         self.print_info = print_info
 
     def forward(self, input):
-        if self.weight_bit_width != None and self.weight_bit_width != 24:
-            self.weight = quantize(self.weight, self.weight_bit_width)
-            if type(self.bias) != type(None):
-                self.bias = quantize(self.bias, self.weight_bit_width)
-
         out = nn.functional.linear(input, self.weight, self.bias)
 
         if self.feature_bit_width != None and self.feature_bit_width != 24:

@@ -143,7 +143,7 @@ def vgg13_bn(pretrained=False, **kwargs):
 def vgg16(pretrained=False, bit_width = None, **kwargs):
 
     if bit_width == None:
-        bit_width = [(None, None) for i in range(16)]
+        bit_width = [None for i in range(16)]
 
     if pretrained:
         kwargs['init_weights'] = False

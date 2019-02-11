@@ -20,9 +20,9 @@ parser.add_argument("-b", "--batch", help="batch_size", default=10, type=int)
 parser.add_argument("-w", "--workers", help="using cpu count", default=12, type=int)
 parser.add_argument("-sc", "--servercount", help="total count of server", default=1, type=int)
 parser.add_argument("-sn", "--servernumber", help="number of this server", type=int, nargs='+', default=[0])
-parser.add_argument("-wb", "--weight", help="weight bitwidth", type=int, nargs='+', default=[None for i in range(300)])
-parser.add_argument("-fb", "--featuremap", help="weight bitwidth", type=int, nargs='+', default=[None for i in range(300)])
-parser.add_argument("-pt", "--pruning_threashold", help="pruning threashold", type=int, nargs='+', default=[None for i in range(300)])
+parser.add_argument("-wb", "--weight", help="weight bitwidth", type=int, nargs='+', default=None)
+parser.add_argument("-fb", "--featuremap", help="weight bitwidth", type=int, nargs='+', default=None)
+parser.add_argument("-pt", "--pruning_threashold", help="pruning threashold", type=int, nargs='+', default=None)
 parser.add_argument("-m", "--model", help="choose model", type=str, default="vgg")
 
 args = parser.parse_args()
@@ -35,6 +35,13 @@ weight_bitwidth = args.weight
 feature_bitwidth = args.featuremap
 pruning_threashold = args.pruning_threashold
 model_name = args.model
+
+if weight_bitwidth != None:
+    weight_bitwidth = [None if x==0 else x for x in weight_bitwidth]
+if feature_bitwidth != None:
+    feature_bitwidth = [None if x==0 else x for x in feature_bitwidth]
+if pruning_threashold != None:
+    pruning_threashold = [None if x==0 else x for x in pruning_threashold]
 #========================argument parser setting=========================
 
 
@@ -67,11 +74,13 @@ sampler=module.rangeSampler(indices))
 
 #========================create model=========================
 if model_name == 'vgg':
-    # quantization_factor = [(feature_bitwidth[j], weight_bitwidth[j]) for j in range(16)]
-    quantization_factor = [(feature_bitwidth[j], None) for j in range(16)]
+    if quantization_factor != None:
+    quantization_factor = [feature_bitwidth[j] for j in range(16)]
     model = vgg.vgg16(pretrained = True, bit_width = quantization_factor)
+
 elif model_name == 'squeeze':
-    quantization_factor = [(feature_bitwidth[j], weight_bitwidth[j]) for j in range(26)]
+    if quantization_factor != None:
+    quantization_factor = [feature_bitwidth[j] for j in range(26)]
     model = squeeze.squeezenet1_0(pretrained = True, bit_width = quantization_factor)
 
 model = torch.nn.DataParallel(model).cuda()
@@ -81,21 +90,21 @@ model = torch.nn.DataParallel(model).cuda()
 
 #========================weight processing=========================
 state_dict = model.state_dict()
-        
+
 counter = 0
 for module_name, layer in model.named_modules():
     if type(layer) == torch.nn.modules.conv.Conv2d \
     or type(layer) == torch.nn.modules.linear.Linear \
     or type(layer) == torch.nn.modules.batchnorm.BatchNorm2d \
     or type(layer) == module.QuantizeConv2d \
-    or type(layer) == module.QuantizeLinear: 
+    or type(layer) == module.QuantizeLinear:
         for layer_name, parameter in layer.named_parameters():
             if weight_bitwidth[counter] != None:
                 state_dict[module_name + '.' + layer_name] = module.quantize(parameter, weight_bitwidth[counter])
             if pruning_threashold[counter] != None:
                 state_dict[module_name + '.' + layer_name] = state_dict[module_name + '.' + layer_name] * module.pruning(parameter, pruning_threashold[counter])
         counter += 1
-     
+
 model.load_state_dict(state_dict)
 #========================weight processing=========================
 

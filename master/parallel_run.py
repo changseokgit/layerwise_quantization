@@ -6,7 +6,7 @@ import time
 
 # serverlist = {'changseok@163.180.172.26 -p 16022' : 378, 'changseok@163.180.172.118 -p 16022' : 594, 'changseok@dgx.komosys.com' : 308}
 # serverlist = {'changseok@163.180.172.26 -p 16022' : 1, 'changseok@163.180.172.118 -p 16022' : 1, 'changseok@dgx.komosys.com' : 1}
-serverlist = {'dgx.komosys.com' : 1, 'dgx.komosys.com' : 1, 'dgx.komosys.com' : 1, 'dgx.komosys.com' : 1}
+serverlist = {'changseok@163.180.172.118 -p 16022' : 1}
 
 
 def work(server, query, sc, sn, local_result):

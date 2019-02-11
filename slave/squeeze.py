@@ -112,7 +112,7 @@ def squeezenet1_0(pretrained=False, bit_width = None, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     if bit_width == None:
-        bit_width = [(None, None) for i in range(26)]
+        bit_width = [None for i in range(26)]
 
     model = SqueezeNet(version=1.0, bit_width = bit_width, **kwargs)
     if pretrained:
