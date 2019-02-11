@@ -74,14 +74,18 @@ sampler=module.rangeSampler(indices))
 
 #========================create model=========================
 if model_name == 'vgg':
-    if quantization_factor != None:
-    quantization_factor = [feature_bitwidth[j] for j in range(16)]
-    model = vgg.vgg16(pretrained = True, bit_width = quantization_factor)
+    if feature_bitwidth != None:
+        quantization_factor = [feature_bitwidth[j] for j in range(16)]
+        model = vgg.vgg16(pretrained = True, bit_width = quantization_factor)
+    else:
+         model = vgg.vgg16(pretrained = True)
 
 elif model_name == 'squeeze':
-    if quantization_factor != None:
-    quantization_factor = [feature_bitwidth[j] for j in range(26)]
-    model = squeeze.squeezenet1_0(pretrained = True, bit_width = quantization_factor)
+    if feature_bitwidth != None:
+        quantization_factor = [feature_bitwidth[j] for j in range(26)]
+        model = squeeze.squeezenet1_0(pretrained = True, bit_width = quantization_factor)
+    else:
+        model = squeeze.squeezenet1_0(pretrained = True)
 
 model = torch.nn.DataParallel(model).cuda()
 
