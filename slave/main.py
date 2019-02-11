@@ -74,7 +74,7 @@ elif model_name == 'squeeze':
     quantization_factor = [(feature_bitwidth[j], weight_bitwidth[j]) for j in range(26)]
     model = squeeze.squeezenet1_0(pretrained = True, bit_width = quantization_factor)
 
-    model = torch.nn.DataParallel(model).cuda()
+model = torch.nn.DataParallel(model).cuda()
 
 #========================create model=========================
 
@@ -92,9 +92,9 @@ state_dict = model.state_dict()
         or type(layer) == module.QuantizeConv2d \
         or type(layer) == module.QuantizeLinear: 
             for layer_name, parameter in layer.named_parameters():
-                if quantization_factor[counter] != None:
+                if weight_bitwidth[counter] != None:
                     state_dict[module_name + '.' + layer_name] = module.quantize(parameter, weight_bitwidth[counter])
-                if pruning_factor != None:
+                if pruning_threashold[counter] != None:
                     state_dict[module_name + '.' + layer_name] = state_dict[module_name + '.' + layer_name] * module.pruning(parameter, pruning_threashold[counter])
                     sum += len(torch.nonzero(state_dict[module_name + '.' + layer_name]))
                     total += len(state_dict[module_name + '.' + layer_name].view(-1))
