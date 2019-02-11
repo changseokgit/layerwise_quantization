@@ -19,7 +19,6 @@ parser.add_argument("-d", "--data", help="data directory", default='/home/changs
 parser.add_argument("-b", "--batch", help="batch_size", default=10, type=int)
 parser.add_argument("-w", "--workers", help="using cpu count", default=12, type=int)
 parser.add_argument("-sc", "--servercount", help="total count of server", default=1, type=int)
-# parser.add_argument("-sn", "--servernumber", help="number of this server", default=0, type=int)
 parser.add_argument("-sn", "--servernumber", help="number of this server", type=int, nargs='+', default=[0])
 parser.add_argument("-wb", "--weight", help="weight bitwidth", type=int, nargs='+', default=[None for i in range(300)])
 parser.add_argument("-fb", "--featuremap", help="weight bitwidth", type=int, nargs='+', default=[None for i in range(300)])
@@ -66,14 +65,28 @@ sampler=module.rangeSampler(indices))
 
 #========================create model=========================
 if model_name == 'vgg':
-    quantization_factor = [(feature_bitwidth[j], weight_bitwidth[j]) for j in range(16)]
+    # quantization_factor = [(feature_bitwidth[j], weight_bitwidth[j]) for j in range(16)]
+    quantization_factor = [(feature_bitwidth[j], None) for j in range(16)]
     model = vgg.vgg16(pretrained = True, bit_width = quantization_factor)
 elif model_name == 'squeeze':
     quantization_factor = [(feature_bitwidth[j], weight_bitwidth[j]) for j in range(26)]
     model = squeeze.squeezenet1_0(pretrained = True, bit_width = quantization_factor)
-
-model = torch.nn.DataParallel(model).cuda()
 #========================create model=========================
+
+
+#========================weight processing=========================
+counter = 0
+for layer in model.modules():
+    if type(layer) == torch.nn.modules.conv.Conv2d or type(layer) == torch.nn.modules.linear.Linear or type(layer) == torch.nn.modules.batchnorm.BatchNorm2d:
+        for parameter in layer.parameters():
+            module.quantize(parameter, weight_bitwidth[counter])
+        counter += 1
+#========================weight processing=========================
+
+
+#========================reload model=========================
+model = torch.nn.DataParallel(model).cuda()
+#========================reload model=========================
 
 
 #========================validate=========================
