@@ -1,56 +1,111 @@
 import torch
 import torch.nn as nn
-import module
 
-
-class Net(nn.Module):
-    def __init__(self, bitwidth = None):
+class MobileNet(nn.Module):
+    def __init__(self, bit_width = [None for i in range(28)]):
         super(Net, self).__init__()
 
-        if bitwidth == None:
-            bitwidth = [(None, None) for i in range(28)]
-        print(bitwidth)
-
-        def conv_bn(inp, oup, stride, bitwidth = (None, None)):
-            return nn.Sequential(
-                module.QuantizeConv2d(inp, oup, 3, stride, 1, bias=False, bit_width = bitwidth),
-                nn.BatchNorm2d(oup),
-                nn.ReLU(inplace=True)
-            )
-
-        def conv_dw(inp, oup, stride, bitwidth):
-            return nn.Sequential(
-                module.QuantizeConv2d(inp, inp, 3, stride, 1, groups=inp, bias=False, bit_width = bitwidth[0]),
-                nn.BatchNorm2d(inp),
-                nn.ReLU(inplace=True),
-
-                module.QuantizeConv2d(inp, oup, 1, 1, 0, bias=False, bit_width = bitwidth[1]),
-                nn.BatchNorm2d(oup),
-                nn.ReLU(inplace=True),
-            )
-
         self.model = nn.Sequential(
-            conv_bn(  3,  32, 2, bitwidth[0]),
-            conv_dw( 32,  64, 1, bitwidth[1:3]),
-            conv_dw( 64, 128, 2, bitwidth[3:5]),
-            conv_dw(128, 128, 1, bitwidth[5:7]),
-            conv_dw(128, 256, 2, bitwidth[7:9]),
-            conv_dw(256, 256, 1, bitwidth[9:11]),
-            conv_dw(256, 512, 2, bitwidth[11:13]),
-            conv_dw(512, 512, 1, bitwidth[13:15]),
-            conv_dw(512, 512, 1, bitwidth[15:17]),
-            conv_dw(512, 512, 1, bitwidth[17:19]),
-            conv_dw(512, 512, 1, bitwidth[19:21]),
-            conv_dw(512, 512, 1, bitwidth[21:23]),
-            conv_dw(512, 1024, 2, bitwidth[23:25]),
-            conv_dw(1024, 1024, 1, bitwidth[25:27]),
-            nn.AvgPool2d(7),
+            module.QuantizeConv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bit_width = bit_width[0]),
+            nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[1]),
+            nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(32, 64, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[2]),
+            nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bit_width = bit_width[3]),
+            nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[4]),
+            nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[5]),
+            nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[6]),
+            nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bit_width = bit_width[7]),
+            nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(128, 256, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[8]),
+            nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[9]),
+            nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(256, 256, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[10]),
+            nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bit_width = bit_width[11]),
+            nn.BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(256, 512, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[12]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[13]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[14]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[15]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[16]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[17]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[18]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[19]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[20]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[21]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[22]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bit_width = bit_width[23]),
+            nn.BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(512, 1024, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[24]),
+            nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bit_width = bit_width[25]),
+            nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            module.QuantizeConv2d(1024, 1024, kernel_size=(1, 1), stride=(1, 1), bit_width = bit_width[26]),
+            nn.BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
+            nn.ReLU(),
+            nn.AvgPool2d(kernel_size=7, stride=7, padding=0),
         )
-        self.fc = module.QuantizeLinear(1024, 1000, bit_width=bitwidth[27])
+        self.fc = module.QuantizeLinear(in_features=1024, out_features=1000, bias=True, bit_width = bit_width[27])
+
 
     def forward(self, x):
         x = self.model(x)
         x = x.view(-1, 1024)
         x = self.fc(x)
-        print(x)
         return x
+
+    
+def mobilenet(pretrained=True, bit_width = None):
+    if bit_width != None:
+        model = MobileNet(bit_width = bit_width)
+    else:
+        model = MobileNet()
+    
+    if pretrained:
+        model.load_state_dict(torch.load('mobilenet_best.weight'))
+    
+    return model
